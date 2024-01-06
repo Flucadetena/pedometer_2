@@ -1,0 +1,33 @@
+name: pedometer_plus
+description: A Pedometer and Step Detection package for Android and iOS. Step count is streamed as the platform updates it.
+
+version: 1.0.1
+
+repository: https://github.com/akaboshinit/pedometer_plus
+issue_tracker: https://github.com/akaboshinit/pedometer_plus/issues
+topics:
+  - pedometer
+screenshots:
+  - description: 'Examples of the StepStatusStream screen on iOS.'
+    path: images/example.png
+
+environment:
+  sdk: '>=3.0.1 <4.0.0'
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.example.pedometer
+        pluginClass: PedometerPlugin
+      ios:
+        pluginClass: PedometerPlugin
