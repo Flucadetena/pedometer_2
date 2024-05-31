@@ -7,19 +7,19 @@ public class SwiftPedometerPlugin: NSObject, FlutterPlugin {
     // Register Plugin
     public static func register(with registrar: FlutterPluginRegistrar) {
         let streamStepDetectionHandler = StreamStepDetector()
-        let streamStepDetectionChannel = FlutterEventChannel.init(name: "step_detection", binaryMessenger: registrar.messenger())
+        let streamStepDetectionChannel = FlutterEventChannel.init(name: "status_detection", binaryMessenger: registrar.messenger())
         streamStepDetectionChannel.setStreamHandler(streamStepDetectionHandler)
         
         let oldstreamStepCountHandler = OldStreamStepCounter()
         let oldstreamStepCountChannel = FlutterEventChannel.init(name: "step_count", binaryMessenger: registrar.messenger())
         oldstreamStepCountChannel.setStreamHandler(oldstreamStepCountHandler)
         
-        let eventChannelName = "dev.akaboshinit.pedometer_plus.stream";
+        let eventChannelName = "step_count_from";
         let eventChannel = FlutterEventChannel.init(name: eventChannelName, binaryMessenger: registrar.messenger())
         let streamStepCountHandler = StreamStepCounter()
         eventChannel.setStreamHandler(streamStepCountHandler)
         
-        let methodChannelName = "dev.akaboshinit.pedometer_plus";
+        let methodChannelName = "method_channel";
         let methodChannel = FlutterMethodChannel.init(name: methodChannelName, binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(SwiftPedometerPlugin(), channel: methodChannel)
     }

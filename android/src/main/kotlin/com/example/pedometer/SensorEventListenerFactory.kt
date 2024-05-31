@@ -5,7 +5,6 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import io.flutter.plugin.common.EventChannel
-
 fun sensorEventListener(events: EventChannel.EventSink): SensorEventListener? {
     return object : SensorEventListener {
 

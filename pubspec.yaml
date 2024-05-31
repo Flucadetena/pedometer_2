@@ -1,7 +1,7 @@
 name: pedometer_plus
 description: A Pedometer and Step Detection package for Android and iOS. Step count is streamed as the platform updates it.
 
-version: 1.0.1
+version: 1.2.0
 
 repository: https://github.com/akaboshinit/pedometer_plus
 issue_tracker: https://github.com/akaboshinit/pedometer_plus/issues
