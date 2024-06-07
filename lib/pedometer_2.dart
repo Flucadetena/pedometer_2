@@ -3,7 +3,6 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:pedometer_2/helpers.dart';
 
 enum StepStatus {
   stopped,
@@ -144,7 +143,7 @@ class Pedometer {
       from ??= to.subtract(const Duration(days: 10));
 
       final args = {'startTime': from.millisecondsSinceEpoch, 'endTime': to.millisecondsSinceEpoch};
-      final int steps = await methodChannel.invokeMethod(enumToString(PedometerMethods.getStepCount), args);
+      final int steps = await methodChannel.invokeMethod(_enumToString(PedometerMethods.getStepCount), args);
 
       return steps;
     } catch (e) {
@@ -189,3 +188,5 @@ class Pedometer {
     return _androidStepStatusController.stream;
   }
 }
+
+String _enumToString(Object o) => o.toString().split('.').last;

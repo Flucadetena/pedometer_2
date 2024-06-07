@@ -94,7 +94,12 @@ class StepData extends StatefulWidget {
 class _StepDataState extends State<StepData> {
   int? stepCount;
   int? stepCountStream;
+
+  /// Only for IOS out of the box.
+  /// For android use a combination of getStepCount and stepCountStream. (Example code below)
   int? stepCountStreamFrom;
+  // only used to show how to implement the streamFrom in android
+  int? androidFirstStepFrom;
 
   StreamSubscription? _stepStream;
   StreamSubscription? _stepStreamFrom;
@@ -118,11 +123,12 @@ class _StepDataState extends State<StepData> {
     _stepStreamFrom?.cancel();
   }
 
+  // ! Need to add pedestrian status example
+
   void _checkPermissions() async {
     PermissionStatus perm =
         Platform.isAndroid ? await Permission.activityRecognition.request() : await Permission.sensors.request();
 
-    print('perm: $perm');
     if (perm.isDenied || perm.isPermanentlyDenied || perm.isRestricted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -137,22 +143,26 @@ class _StepDataState extends State<StepData> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(themeBorderRadius),
           ),
+          // Open the system settings to allow the permissions
+          action: SnackBarAction(
+            label: 'Settings',
+            textColor: Theme.of(context).colorScheme.onError,
+            onPressed: () => openAppSettings(),
+          ),
         ),
       );
     } else {
       _loadStepCount();
-      // _loadStepCountStream();
-      // _loadStepCountStreamFrom();
+      _loadStepCountStream();
+      _loadStepCountStreamFrom();
     }
   }
 
   void _loadStepCount() async {
     try {
       stepCount = await Pedometer().getStepCount();
-      print('stepCount: $stepCount');
       setState(() {});
     } catch (e) {
-      print('getStepCount error: $e');
       throw Exception('getStepCount error: $e');
     }
   }
@@ -160,19 +170,38 @@ class _StepDataState extends State<StepData> {
   void _loadStepCountStream() {
     try {
       _stepStream = Pedometer().stepCountStream().listen((step) {
-        print('stream: $step');
         stepCountStream = step;
         setState(() {});
       });
     } catch (e) {
-      print('stepCountStream error: $e');
       throw Exception('stepCountStream error: $e');
     }
   }
 
-  void _loadStepCountStreamFrom() {
+  void _loadStepCountStreamFrom() async {
     try {
-      if (Platform.isAndroid) return;
+      if (Platform.isAndroid) {
+        /// In android this call is not supported but you can mix the getStep and the stream.
+        /// For this you need to save the first stepCount from the stream and subtract this plus the last steps amount registered
+        /// and add the difference.
+        stepCountStreamFrom = await Pedometer().getStepCount(from: from, to: DateTime.now());
+        setState(() {});
+
+        _stepStreamFrom = Pedometer().stepCountStream().listen((step) {
+          if (androidFirstStepFrom == null) {
+            // Like this you may lose some steps if the original count was 0.
+            // You can improve this condition, this is just to show and example.
+            androidFirstStepFrom = step;
+            return;
+          }
+       
+          stepCountStreamFrom = stepCountStreamFrom! + step - androidFirstStepFrom!;
+          setState(() {});
+        });
+        return;
+      }
+      //! Stream on IOS not starting with the same value. WRONG!
+      //! Change this name to pedestrian status => Pedometer().stepStatusStream()
       _stepStreamFrom = Pedometer().stepCountStreamFrom(from: from).listen((step) {
         print('streamFrom: $step');
         stepCountStreamFrom = step;

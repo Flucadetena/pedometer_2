@@ -19,10 +19,10 @@ This plugin allows to get this info in both Android and IOS:
 
 ### Permissions
 
-For both Android and IOS you need to use request permission to track users activity.
-I recommend using the package [Permission_handler](https://pub.dev/packages/permission_handler), but you can use others if it suits you best.
+For both Android and IOS you need to request permission to track users activity.
+I recommend using the package [Permission_handler](https://pub.dev/packages/permission_handler), but you can use others if it suits you better.
 
-Using Permission handler (adapt as need for yours) you need to:
+Using Permission handler you need to: (adapt for other packages)
 
 <details open>
   <summary><b>IOS</b></summary>
@@ -62,15 +62,62 @@ Using Permission handler (adapt as need for yours) you need to:
 <details open>
   <summary><b>ANDROID</b></summary>
 
-- No need to include "ACTIVITY_RECOGNITION" in your Android manifest. It will be added on build
-- It requires Android 10 (minSDK lvl 29)
-- Make sure to support Android X _(If your project is not very very old, this is already enabled)_
+- No need to include "ACTIVITY_RECOGNITION" in your Android manifest. It will be added on build.
+- It **requires Android 10 (minSDK lvl 29)**. Change this on your `build.gradle` located under `android>app>build.gradle`.
+- This package uses the embedded **Kotlin version `1.9.10`**. This is either located on your `build.gradle` at the root of the `android` folder: `From this: [ext.kotlin_version = '1.7.10'] to this: [ext.kotlin_version = '1.9.10']`, or in new projects it may be located under `settings.gradle` at the root of the `android` folder: `From this: [id "org.jetbrains.kotlin.android" version "1.7.10" apply false] to this: [id "org.jetbrains.kotlin.android" version "1.9.10" apply false]`. If you have a different version you can try and see if there are no issue, but be aware you may have to change it. Mainly if it is an older version.
+- Also you need to change **Gradle version**. This package uses the minimum compatible with this Kotlin version, **the `8.4`**. For this you need to update the `distributionUrl` in the file `gradle-wrapper.properties` under `android>gradle>wrapper>gradle-wrapper.properties`, and change your current url to this: `distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip`. If you need another version or would like to update to a newer one you can check the compatibility between versions here: [Compatibility Matrix](https://docs.gradle.org/current/userguide/compatibility.html)
+- Make sure to support Android X _(If your project is not very very old, this is already enabled)_.
 
 </details>
   
-  <!-- //! Request Permissions -->
 ## How to Use it
 1. <details open>  
+   <summary><b>Request Permissions</b></summary>
+
+    - Using the *Permission_handler* plugin, you can request permission for both platforms.
+    - This plugin includes a very handy function to open the system setting for the app and make it easier for the user to change them in case the prompt is not shown.
+        #### Behavior
+    - The first time you request a permission to the user, a dialog should pop requesting access to the his activity. The following times the permission request will automatically return an answer based on the previous answer or the current setting of the app if the user has set them from the setting screen in the OS.
+    - Take this into consideration to show the user a dialog of snackbar and request him to update the permissions.  
+    **Please make sure the previous "Permissions" step has been implemented correctly as you may get false positives or negatives if not*
+        
+        #### Example:
+        ```dart
+        import 'package:permission_handler/permission_handler.dart';
+
+        PermissionStatus perm = 
+            Platform.isAndroid ? await Permission.activityRecognition.request() : await Permission.sensors.request();
+            print('perm: $perm');
+            
+            if (perm.isDenied || perm.isPermanentlyDenied || perm.isRestricted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'You need to approve the permissions to use the pedometer',
+                            style: TextStyle(
+                            color: Theme.of(context).colorScheme.onError,
+                            fontWeight: FontWeight.bold,
+                            ),
+                        ),
+                        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(themeBorderRadius),
+                        ),
+                        // Open the system settings to allow the permissions
+                        action: SnackBarAction(
+                            label: 'Settings',
+                            textColor: Theme.of(context).colorScheme.onError,
+                            onPressed: () => openAppSettings(),
+                        ),
+                    ),
+                );
+            } else {
+               // Call the functions your need to read stepCount
+            }
+        ```
+    </details>
+
+2. <details open>  
    <summary><b>Get Step count</b></summary>
 
     - You can request the total amount of steps taken by the user in an specific time period (from/to).
@@ -93,7 +140,7 @@ Using Permission handler (adapt as need for yours) you need to:
         ```
     </details>
 
-2. <details open>  
+3. <details open>  
     <summary><b>Get real time step count (Stream) & Steps since last system boot</b></summary>
 
     - When called it will first return the steps recorded since the last system boot. If the user moves it will keep streaming the updated number of steps.
@@ -124,7 +171,7 @@ Using Permission handler (adapt as need for yours) you need to:
         ````
     </details>
 
-3. <details open>  
+4. <details open>  
     <summary><b>Get real time pedestrian status: Awaking, Stopped (Stream)</b></summary>
 
     - When called it will return the current pedestrian status, either `stopped` or `walking`. In case of an error it will return `unknown`.
@@ -152,10 +199,10 @@ Using Permission handler (adapt as need for yours) you need to:
         ````
     </details>
 
-4. <details open>  
+5. <details open>  
     <summary><b>[IOS] Get real time step count since a date (Stream)</b></summary>
     
-    - ***[Android alternative]** Use a combination of the `getStepCount` and `stepCountStream`.*
+    - ***[Android alternative]** Use a combination of the `getStepCount` and `stepCountStream`. Example in the `Example App`*
     
     - It will return the total amount of steps taken by the user `from` a specific date to `now()`, and then keep streaming as the number of steps increase.
         #### Behavior
@@ -207,7 +254,12 @@ In the case that the step sensor is not available, an error will be thrown. The 
 - [Pedometer](https://pub.dev/packages/pedometer) by [cachet.dk](https://pub.dev/publishers/cachet.dk/packages)
 - [Simple_pedometer](https://pub.dev/packages/simple_pedometer) by [bookm.me](https://pub.dev/publishers/bookm.me/packages)
 
-## Package Status
+***_The example app was inspired by [Purrweb Agency - Dribbble](https://dribbble.com/shots/22762014-Step-Counter-Mobile-iOS-App)_**
+
+## Package Status & Contribute
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/f.lucadetena)
+
 
 | Pub v.|Points| Popularity| Issues| Pull requests|
 |-|-|-|-|-|
