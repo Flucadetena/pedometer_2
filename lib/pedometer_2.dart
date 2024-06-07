@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:pedometer_plus/helpers.dart';
+import 'package:pedometer_2/helpers.dart';
 
 enum StepStatus {
   stopped,
@@ -16,20 +16,20 @@ enum PedometerMethods {
 }
 
 class Pedometer {
-  /// The [EventChannel] for StepStatus events.
-  static const EventChannel _statusDetectionChannel = const EventChannel('status_detection');
+ /// The [EventChannel] for StepStatus events.
+  static EventChannel statusDetectionChannel = const EventChannel('status_detection');
 
   /// The [EventChannel] for step count events.
-  static const EventChannel _stepCountChannel = const EventChannel('step_count');
+  static  EventChannel stepCountChannel = const EventChannel('step_count');
 
   /// The [EventChannel] for the IOS step count from X date events.
-  static const EventChannel _stepCountFromChannel = const EventChannel('step_count_from');
+  static  EventChannel stepCountFromChannel = const EventChannel('step_count_from');
 
   /// MethodChannel to handle all "OneTime" calls. Currently only used for 'getStepCount'.
-  static const MethodChannel _methodChannel = MethodChannel('method_channel');
+  static  MethodChannel methodChannel = const MethodChannel('method_channel');
 
   /// A stream controller for tracking step status on Android.
-  static StreamController<StepStatus> _androidStepStatusController = StreamController.broadcast();
+  static final StreamController<StepStatus> _androidStepStatusController = StreamController.broadcast();
 
   /// Returns a stream of [StepStatus] representing the status of steps.
   ///
@@ -48,7 +48,7 @@ class Pedometer {
   Stream<StepStatus> stepStatusStream() {
     try {
       Stream<StepStatus> stream =
-          _statusDetectionChannel.receiveBroadcastStream().map((event) => StepStatus.values[event as int]);
+          statusDetectionChannel.receiveBroadcastStream().map((event) => StepStatus.values[event as int]);
       if (Platform.isAndroid) return _androidStream(stream);
       return stream;
     } catch (e) {
@@ -76,7 +76,7 @@ class Pedometer {
   /// ```
   Stream<int> stepCountStream() {
     try {
-      return _stepCountChannel.receiveBroadcastStream().map((event) => event as int);
+      return stepCountChannel.receiveBroadcastStream().map((event) => event as int);
     } catch (e) {
       throw ErrorSummary('Error on StepCountStream: $e');
     }
@@ -108,7 +108,7 @@ class Pedometer {
           'stepCountStreamFrom() is not supported on Android. Use a combination of "getStepCount()" and "StepCountStream()"');
     }
     try {
-      return _stepCountFromChannel
+      return stepCountFromChannel
           .receiveBroadcastStream({'startTime': from.millisecondsSinceEpoch}).map((event) => event as int);
     } catch (e) {
       throw ErrorSummary('Error on StepCountStreamFrom: $e');
@@ -141,10 +141,10 @@ class Pedometer {
     assert(!(from != null && to != null && from.compareTo(to) > 0), "From must be before to");
     try {
       to ??= DateTime.now();
-      from ??= to.subtract(Duration(days: 10));
+      from ??= to.subtract(const Duration(days: 10));
 
       final args = {'startTime': from.millisecondsSinceEpoch, 'endTime': to.millisecondsSinceEpoch};
-      final int steps = await _methodChannel.invokeMethod(enumToString(PedometerMethods.getStepCount), args);
+      final int steps = await methodChannel.invokeMethod(enumToString(PedometerMethods.getStepCount), args);
 
       return steps;
     } catch (e) {
@@ -178,7 +178,7 @@ class Pedometer {
       /// After receiving an event, start a timer for 2 seconds, after
       /// which a 'stopped' event is emitted. If it manages to go through,
       /// it is because no events were received for the 2 second duration
-      t = Timer(Duration(seconds: 2), () {
+      t = Timer(const Duration(seconds: 2), () {
         _androidStepStatusController.add(StepStatus.stopped);
         stepStatus = StepStatus.stopped;
       });

@@ -1,27 +1,25 @@
 import Flutter
 import UIKit
-
 import CoreMotion
 
-public class SwiftPedometerPlugin: NSObject, FlutterPlugin {
-    // Register Plugin
+public class Pedometer_2Plugin: NSObject, FlutterPlugin {
+  // Register Plugin
     public static func register(with registrar: FlutterPluginRegistrar) {
         let streamStepDetectionHandler = StreamStepDetector()
         let streamStepDetectionChannel = FlutterEventChannel.init(name: "status_detection", binaryMessenger: registrar.messenger())
         streamStepDetectionChannel.setStreamHandler(streamStepDetectionHandler)
         
-        let oldstreamStepCountHandler = OldStreamStepCounter()
-        let oldstreamStepCountChannel = FlutterEventChannel.init(name: "step_count", binaryMessenger: registrar.messenger())
-        oldstreamStepCountChannel.setStreamHandler(oldstreamStepCountHandler)
-        
-        let eventChannelName = "step_count_from";
-        let eventChannel = FlutterEventChannel.init(name: eventChannelName, binaryMessenger: registrar.messenger())
         let streamStepCountHandler = StreamStepCounter()
-        eventChannel.setStreamHandler(streamStepCountHandler)
+        let streamStepCountChannel = FlutterEventChannel.init(name: "step_count", binaryMessenger: registrar.messenger())
+        streamStepCountChannel.setStreamHandler(streamStepCountHandler)
+        
+        let stepCountFromChannel = FlutterEventChannel.init(name: "step_count_from", binaryMessenger: registrar.messenger())
+        let stepCountFromHandler = StreamStepCountFrom()
+        stepCountFromChannel.setStreamHandler(stepCountFromHandler)
         
         let methodChannelName = "method_channel";
         let methodChannel = FlutterMethodChannel.init(name: methodChannelName, binaryMessenger: registrar.messenger())
-        registrar.addMethodCallDelegate(SwiftPedometerPlugin(), channel: methodChannel)
+        registrar.addMethodCallDelegate(Pedometer_2Plugin(), channel: methodChannel)
     }
     
     private let stepCount = StepCount()
@@ -85,7 +83,7 @@ public class StreamStepDetector: NSObject, FlutterStreamHandler {
 }
 
 /// StepCounter, handles step count streaming
-public class OldStreamStepCounter: NSObject, FlutterStreamHandler {
+public class StreamStepCounter: NSObject, FlutterStreamHandler {
     private let pedometer = CMPedometer()
     private var running = false
     private var eventSink: FlutterEventSink?
@@ -137,7 +135,7 @@ public class OldStreamStepCounter: NSObject, FlutterStreamHandler {
     }
 }
 
-public class StreamStepCounter: NSObject, FlutterStreamHandler {
+public class StreamStepCountFrom: NSObject, FlutterStreamHandler {
     private let pedometer = CMPedometer()
     private var running = false
     private var eventSink: FlutterEventSink?

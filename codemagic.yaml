@@ -1,0 +1,59 @@
+workflows:
+  #  ====================
+  #  DEPLOYMENT TO PUB
+  #  ====================
+  deploy_to_pub:
+    name: 'Deploy to pub.dev'
+    instance_type: mac_mini_m1
+    max_build_duration: 20
+    environment:
+      flutter:
+        version: 3.19.6
+    scripts:
+      - name: Install dependencies
+        script: flutter pub get
+      - name: Run tests
+        script: flutter test
+      - name: Publish package
+        script: |
+          echo $PUB_DEV_PUBLISH_ACCESS_TOKEN > ~/.pub-cache/credentials.json
+          flutter pub publish --dry-run
+          flutter pub publish
+    triggering:
+      events:
+        - manual
+
+
+workflows:
+ 
+  pub_dev_release:
+    name: 'Pub.dev Release workflow'
+    <<: *def_setup
+    triggering:
+      <<: *dev_trigger
+    environment:
+      <<: *flutter_version
+      android_signing:
+        - movn-dev-android-key
+      groups:
+        - dev_credentials
+        - android
+    scripts:
+      - *commit_check
+      - *guard_only_ios
+      - *pub_get
+      - *android_local_properties
+      - name: Build APK
+        script: |
+          flutter build apk --release --flavor dev
+    artifacts:
+      - build/app/outputs/apk/dev/release/*.apk
+      - *mapping
+    publishing:
+      <<: *email_notification
+      firebase:
+        firebase_service_account: $FIREBASE_DEV_CREDENTIALS
+        android:
+          app_id: 1:476796097234:android:41c27b49b861742675530b
+          groups:
+            - android-team

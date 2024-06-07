@@ -1,5 +1,3 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.example.pedometer">
-
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.pedometer_2">
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 </manifest>
