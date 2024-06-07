@@ -13,8 +13,7 @@ This plugin allows to get this info in both Android and IOS:
 > **Yes all of this is supported in both Android and IOS*  
 > **It uses the Sensors API (on Android & IOS) and the Recording API (Android).*
 
-<!-- ! ADD the new IMAGES -->
-<img height="500px" src="https://github.com/akaboshinit/pedometer_plus/raw/main/images/example.png"/>
+<img height="500px" src="https://github.com/Flucadetena/pedometer_2/raw/main/assets/example_preview.png"/>
 
 ## Configuration
 
