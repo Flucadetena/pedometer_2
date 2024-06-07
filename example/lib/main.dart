@@ -59,13 +59,22 @@ class Home extends StatelessWidget {
       child: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(scaffoldPadding),
-          child: Stack(
+          child: Column(
             children: [
-              const UserPreview(),
-              const StepData(),
-              Positioned(
-                top: sizes.stepDataHeight - sizes.gitSize,
-                child: const GitInfo(),
+              const Text(
+                'Example App',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Stack(
+                children: [
+                  const UserPreview(),
+                  const StepData(),
+                  Positioned(
+                    top: sizes.stepDataHeight - sizes.gitSize,
+                    child: const GitInfo(),
+                  ),
+                ],
               ),
             ],
           ),
