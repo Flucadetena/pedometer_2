@@ -4,7 +4,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-enum StepStatus {
+enum PedestrianStatus {
   stopped,
   walking,
   unknown,
@@ -16,7 +16,7 @@ enum PedometerMethods {
 
 class Pedometer {
  /// The [EventChannel] for StepStatus events.
-  static EventChannel statusDetectionChannel = const EventChannel('status_detection');
+  static EventChannel pedestrianStatusChannel = const EventChannel('status_detection');
 
   /// The [EventChannel] for step count events.
   static  EventChannel stepCountChannel = const EventChannel('step_count');
@@ -28,26 +28,26 @@ class Pedometer {
   static  MethodChannel methodChannel = const MethodChannel('method_channel');
 
   /// A stream controller for tracking step status on Android.
-  static final StreamController<StepStatus> _androidStepStatusController = StreamController.broadcast();
+  static final StreamController<PedestrianStatus> _androidPedestrianStatusController = StreamController.broadcast();
 
-  /// Returns a stream of [StepStatus] representing the status of steps.
+  /// Returns a stream of [PedestrianStatus] representing the status of steps.
   ///
-  /// The stream emits [StepStatus] values based on the step detection events received from the platform.
+  /// The stream emits [PedestrianStatus] values based on the step detection events received from the platform.
   /// Events are fired every time a step is detected.
   /// On Android, the stream is processed by [_androidStream] before being returned.
   ///
   /// Example usage:
   /// ```dart
   /// Pedometer pedometer = Pedometer();
-  /// Stream<StepStatus> statusStream = pedometer.stepStatusStream();
+  /// Stream<StepStatus> statusStream = pedometer.pedestrianStatusStream();
   /// statusStream.listen((status) {
   ///   print('Step status: $status');
   /// });
   /// ```
-  Stream<StepStatus> stepStatusStream() {
+  Stream<PedestrianStatus> pedestrianStatusStream() {
     try {
-      Stream<StepStatus> stream =
-          statusDetectionChannel.receiveBroadcastStream().map((event) => StepStatus.values[event as int]);
+      Stream<PedestrianStatus> stream =
+          pedestrianStatusChannel.receiveBroadcastStream().map((event) => PedestrianStatus.values[event as int]);
       if (Platform.isAndroid) return _androidStream(stream);
       return stream;
     } catch (e) {
@@ -152,10 +152,10 @@ class Pedometer {
   }
 
   /// Transformed stream for the Android platform
-  static Stream<StepStatus> _androidStream(Stream<StepStatus> stream) {
+  static Stream<PedestrianStatus> _androidStream(Stream<PedestrianStatus> stream) {
     /// Init a timer and a status
     Timer? t;
-    StepStatus? stepStatus;
+    PedestrianStatus? stepStatus;
 
     /// Listen for events on the original stream
     /// Transform these events by using the timer
@@ -168,9 +168,9 @@ class Pedometer {
 
         /// If a previous status was either not set yet, or was 'stopped'
         /// then a 'walking' event should be emitted.
-        if (stepStatus == null || stepStatus == StepStatus.stopped) {
-          _androidStepStatusController.add(StepStatus.walking);
-          stepStatus = StepStatus.walking;
+        if (stepStatus == null || stepStatus == PedestrianStatus.stopped) {
+          _androidPedestrianStatusController.add(PedestrianStatus.walking);
+          stepStatus = PedestrianStatus.walking;
         }
       }
 
@@ -178,14 +178,14 @@ class Pedometer {
       /// which a 'stopped' event is emitted. If it manages to go through,
       /// it is because no events were received for the 2 second duration
       t = Timer(const Duration(seconds: 2), () {
-        _androidStepStatusController.add(StepStatus.stopped);
-        stepStatus = StepStatus.stopped;
+        _androidPedestrianStatusController.add(PedestrianStatus.stopped);
+        stepStatus = PedestrianStatus.stopped;
       });
     }, onError: (error) {
-      _androidStepStatusController.addError(error);
+      _androidPedestrianStatusController.addError(error);
     });
 
-    return _androidStepStatusController.stream;
+    return _androidPedestrianStatusController.stream;
   }
 }
 

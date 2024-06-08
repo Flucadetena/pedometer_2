@@ -179,7 +179,7 @@ Using Permission handler you need to: (adapt for other packages)
     - When the stream is initialized it may not fire a result until the status changes. So assume the user is stopped from start as it will fire every 1/2 seconds.
         #### Example:
         ````dart
-        StreamSubscription? _subStepStatus;
+        StreamSubscription? _subPedestrianStatus;
 
         @override
         void initState() {
@@ -189,12 +189,12 @@ Using Permission handler you need to: (adapt for other packages)
 
         @override
         void dispose() {
-            _subStepStatus?.cancel();
+            _subPedestrianStatus?.cancel();
             super.dispose();
         }
 
         _listenToStatus() {
-            _subStepStatus = Pedometer().stepStatusStream().listen((status) => print('Status: $status'));
+            _subPedestrianStatus = Pedometer().pedestrianStatusStream().listen((status) => print('Status: $status'));
         }
         ````
     </details>
