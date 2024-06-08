@@ -1,10 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:pedometer_2/pedometer_2.dart';
 import 'package:pedometer_2_example/forms.dart';
 import 'dart:async';
-
 import 'package:permission_handler/permission_handler.dart';
 
 const double themeBorderRadius = 8;
@@ -94,6 +94,7 @@ class StepData extends StatefulWidget {
 class _StepDataState extends State<StepData> {
   int? stepCount;
   int? stepCountStream;
+  PedestrianStatus? pedestrianStatusStream;
 
   /// Only for IOS out of the box.
   /// For android use a combination of getStepCount and stepCountStream. (Example code below)
@@ -103,6 +104,7 @@ class _StepDataState extends State<StepData> {
 
   StreamSubscription? _stepStream;
   StreamSubscription? _stepStreamFrom;
+  StreamSubscription? _pedestrianStatusStream;
 
   DateTime now = DateTime.now();
   // Start of the week - Monday
@@ -121,9 +123,8 @@ class _StepDataState extends State<StepData> {
     super.dispose();
     _stepStream?.cancel();
     _stepStreamFrom?.cancel();
+    _pedestrianStatusStream?.cancel();
   }
-
-  // ! Need to add pedestrian status example
 
   void _checkPermissions() async {
     PermissionStatus perm =
@@ -152,13 +153,28 @@ class _StepDataState extends State<StepData> {
         ),
       );
     } else {
-      _loadStepCount();
-      _loadStepCountStream();
-      _loadStepCountStreamFrom();
+      _getStepCount();
+      _listenStepCountStream();
+      _listenStepCountStreamFrom();
+      _listenPedestrianStatusStream();
+    }
+
+// ! Test if this query works
+    try {
+      var response = await get(Uri.parse('https://github.com/Flucadetena/pedometer_2/issues'));
+      if (response.statusCode == 200) {
+        var issues = jsonDecode(response.body);
+        int numberOfIssues = issues.length;
+        print('Number of issues: $numberOfIssues');
+      } else {
+        throw Exception('Failed to get issues. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error getting issues: $e');
     }
   }
 
-  void _loadStepCount() async {
+  void _getStepCount() async {
     try {
       stepCount = await Pedometer().getStepCount();
       setState(() {});
@@ -167,7 +183,7 @@ class _StepDataState extends State<StepData> {
     }
   }
 
-  void _loadStepCountStream() {
+  void _listenStepCountStream() {
     try {
       _stepStream = Pedometer().stepCountStream().listen((step) {
         stepCountStream = step;
@@ -178,7 +194,7 @@ class _StepDataState extends State<StepData> {
     }
   }
 
-  void _loadStepCountStreamFrom() async {
+  void _listenStepCountStreamFrom() async {
     try {
       if (Platform.isAndroid) {
         /// In android this call is not supported but you can mix the getStep and the stream.
@@ -194,14 +210,15 @@ class _StepDataState extends State<StepData> {
             androidFirstStepFrom = step;
             return;
           }
-       
+
           stepCountStreamFrom = stepCountStreamFrom! + step - androidFirstStepFrom!;
           setState(() {});
         });
         return;
       }
       //! Stream on IOS not starting with the same value. WRONG!
-      //! Change this name to pedestrian status => Pedometer().stepStatusStream()
+      //! Connect numbers to repository. Pull and issues.
+      //! Update readme example img
       _stepStreamFrom = Pedometer().stepCountStreamFrom(from: from).listen((step) {
         print('streamFrom: $step');
         stepCountStreamFrom = step;
@@ -210,6 +227,17 @@ class _StepDataState extends State<StepData> {
     } catch (e) {
       print('stepCountStreamFrom error: $e');
       throw Exception('stepCountStreamFrom error: $e');
+    }
+  }
+
+  _listenPedestrianStatusStream() {
+    try {
+      _pedestrianStatusStream = Pedometer().pedestrianStatusStream().listen((status) {
+        pedestrianStatusStream = status;
+        setState(() {});
+      });
+    } catch (e) {
+      throw Exception('pedestrianStatusStream error: $e');
     }
   }
 
@@ -260,7 +288,8 @@ class _StepDataState extends State<StepData> {
                         time: '${from.formatDate} - ${to.formatDate}',
                         name: 'GetCount',
                         functionName: 'getStepCount()',
-                        amount: stepCount,
+                        value: stepCount.toString(),
+                        stream: false,
                       ),
                       const SizedBox(height: 28),
                       AspectRatio(
@@ -280,11 +309,19 @@ class _StepDataState extends State<StepData> {
                       StepDataSquare(
                         backgroundColor: Theme.of(context).colorScheme.background,
                         foregroundColor: Theme.of(context).colorScheme.onBackground,
+                        name: 'Pedestrian Status',
+                        functionName: 'pedestrianStatusStream()',
+                        value: _enumToString(pedestrianStatusStream),
+                        small: true,
+                      ),
+                      const SizedBox(height: 8),
+                      StepDataSquare(
+                        backgroundColor: Theme.of(context).colorScheme.background,
+                        foregroundColor: Theme.of(context).colorScheme.onBackground,
                         time: 'Last boot - now',
                         name: 'Count',
                         functionName: 'stepCountStream()',
-                        amount: stepCountStream,
-                        type: 'Stream',
+                        value: stepCountStream.toString(),
                       ),
                       const SizedBox(height: 8),
                       StepDataSquare(
@@ -293,8 +330,7 @@ class _StepDataState extends State<StepData> {
                         time: '${from.formatDate} - now',
                         name: 'CountFrom',
                         functionName: 'stepCountStreamFrom()',
-                        amount: stepCountStreamFrom,
-                        type: 'Stream',
+                        value: stepCountStreamFrom.toString(),
                       ),
                     ],
                   ),
@@ -311,20 +347,22 @@ class _StepDataState extends State<StepData> {
 class StepDataSquare extends StatelessWidget {
   final Color backgroundColor;
   final Color foregroundColor;
-  final String time;
   final String name;
   final String functionName;
-  final int? amount;
-  final String? type;
+  final bool small;
+  final bool stream;
+  final String? time;
+  final String? value;
 
   const StepDataSquare({
     required this.backgroundColor,
     required this.foregroundColor,
-    required this.time,
     required this.name,
     required this.functionName,
-    required this.amount,
-    this.type,
+    required this.value,
+    this.small = false,
+    this.stream = true,
+    this.time,
     super.key,
   });
 
@@ -344,14 +382,16 @@ class StepDataSquare extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    time,
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w400,
-                      color: foregroundColor,
+                  if (time case String time) ...{
+                    Text(
+                      time,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w400,
+                        color: foregroundColor,
+                      ),
                     ),
-                  ),
+                  },
                   const SizedBox(height: 4),
                   Expanded(
                     child: Column(
@@ -360,7 +400,7 @@ class StepDataSquare extends StatelessWidget {
                         Text(
                           name,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: small ? 10 : 16,
                             fontWeight: FontWeight.bold,
                             height: 1,
                             color: foregroundColor,
@@ -380,40 +420,41 @@ class StepDataSquare extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        amount == null
-                            ? Container(
-                                height: 14,
-                                width: 14,
-                                margin: const EdgeInsets.all(4),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: foregroundColor,
-                                ),
-                              )
-                            : Text(
-                                amount!.toString(),
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.w900,
-                                  height: 1,
-                                  color: foregroundColor,
-                                ),
-                              ),
+                        if (value case String value)
+                          Text(
+                            value,
+                            style: TextStyle(
+                              fontSize: small ? 20 : 30,
+                              fontWeight: FontWeight.w900,
+                              height: 1,
+                              color: foregroundColor,
+                            ),
+                          )
+                        else
+                          Container(
+                            height: 14,
+                            width: 14,
+                            margin: const EdgeInsets.all(4),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: foregroundColor,
+                            ),
+                          ),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-            if (type case String type)
+            if (stream)
               Opacity(
                 opacity: .6,
                 child: RotatedBox(
                   quarterTurns: 3,
                   child: Text(
-                    type,
+                    'Stream',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: small ? 10 : 16,
                       fontWeight: FontWeight.bold,
                       height: 1,
                       color: foregroundColor,
@@ -696,3 +737,5 @@ extension IntExtension on int {
     return toString().padLeft(2, '0');
   }
 }
+
+String? _enumToString(Object? o) => o?.toString().split('.').last;
