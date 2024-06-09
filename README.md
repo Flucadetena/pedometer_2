@@ -80,40 +80,39 @@ Using Permission handler you need to: (adapt for other packages)
     - The first time you request a permission to the user, a dialog should pop requesting access to the his activity. The following times the permission request will automatically return an answer based on the previous answer or the current setting of the app if the user has set them from the setting screen in the OS.
     - Take this into consideration to show the user a dialog of snackbar and request him to update the permissions.  
     **Please make sure the previous "Permissions" step has been implemented correctly as you may get false positives or negatives if not*
-        
         #### Example:
         ```dart
         import 'package:permission_handler/permission_handler.dart';
 
         PermissionStatus perm = 
-            Platform.isAndroid ? await Permission.activityRecognition.request() : await Permission.sensors.request();
-            print('perm: $perm');
-            
-            if (perm.isDenied || perm.isPermanentlyDenied || perm.isRestricted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'You need to approve the permissions to use the pedometer',
-                            style: TextStyle(
-                            color: Theme.of(context).colorScheme.onError,
-                            fontWeight: FontWeight.bold,
-                            ),
-                        ),
-                        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(themeBorderRadius),
-                        ),
-                        // Open the system settings to allow the permissions
-                        action: SnackBarAction(
-                            label: 'Settings',
-                            textColor: Theme.of(context).colorScheme.onError,
-                            onPressed: () => openAppSettings(),
+        Platform.isAndroid ? await Permission.activityRecognition.request() : await Permission.sensors.request();
+        print('perm: $perm');
+        
+        if (perm.isDenied || perm.isPermanentlyDenied || perm.isRestricted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text(
+                        'You need to approve the permissions to use the pedometer',
+                        style: TextStyle(
+                        color: Theme.of(context).colorScheme.onError,
+                        fontWeight: FontWeight.bold,
                         ),
                     ),
-                );
-            } else {
-               // Call the functions your need to read stepCount
-            }
+                    backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(themeBorderRadius),
+                    ),
+                    // Open the system settings to allow the permissions
+                    action: SnackBarAction(
+                        label: 'Settings',
+                        textColor: Theme.of(context).colorScheme.onError,
+                        onPressed: () => openAppSettings(),
+                    ),
+                ),
+            );
+        } else {
+            // Call the functions your need to read stepCount
+        }
         ```
     </details>
 
@@ -202,7 +201,7 @@ Using Permission handler you need to: (adapt for other packages)
 5. <details open>  
     <summary><b>[IOS] Get real time step count since a date (Stream)</b></summary>
     
-    - ***[Android alternative]** Use a combination of the `getStepCount` and `stepCountStream`. Example in the `Example App`*
+    - ***(Android alternative)** Use a combination of the `getStepCount` and `stepCountStream`. Example in the `Example App`*
     
     - It will return the total amount of steps taken by the user `from` a specific date to `now()`, and then keep streaming as the number of steps increase.
         #### Behavior

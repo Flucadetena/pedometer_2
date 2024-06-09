@@ -84,7 +84,7 @@ class Pedometer {
   /// Returns a stream of steps count starting [from] date.
   ///
   /// On Android, this method is not supported. Instead, use a combination of the
-  /// [getStepCount()] and [StepCountStream()] methods.
+  /// [getStepCount()] and [stepCountStream()] methods.
   ///
   /// The [from] parameter specifies the starting date and time from which to retrieve
   /// the step counts.
@@ -93,9 +93,9 @@ class Pedometer {
   /// ```dart
   /// Pedometer pedometer = Pedometer();
   /// DateTime fromDate = DateTime.now().subtract(Duration(days: 7));
-  /// Stream<int> stepCountStream = pedometer.stepCountStreamFrom(from: fromDate);
+  /// Stream<int> stepCountStreamFrom = pedometer.stepCountStreamFrom(from: fromDate);
   ///
-  /// stepCountStream.listen((stepCount) {
+  /// stepCountStreamFrom.listen((stepCount) {
   ///   print('Step count from $fromDate: $stepCount');
   /// });
   /// ```

@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pedometer_2/pedometer_2.dart';
 import 'package:pedometer_2_example/forms.dart';
 import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
 
+// ! Add the release number to the git info
 const double themeBorderRadius = 8;
 const double scaffoldPadding = 16;
 
@@ -158,25 +160,11 @@ class _StepDataState extends State<StepData> {
       _listenStepCountStreamFrom();
       _listenPedestrianStatusStream();
     }
-
-// ! Test if this query works
-    try {
-      var response = await get(Uri.parse('https://github.com/Flucadetena/pedometer_2/issues'));
-      if (response.statusCode == 200) {
-        var issues = jsonDecode(response.body);
-        int numberOfIssues = issues.length;
-        print('Number of issues: $numberOfIssues');
-      } else {
-        throw Exception('Failed to get issues. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error getting issues: $e');
-    }
   }
 
   void _getStepCount() async {
     try {
-      stepCount = await Pedometer().getStepCount();
+      stepCount = await Pedometer().getStepCount(from: from, to: to);
       setState(() {});
     } catch (e) {
       throw Exception('getStepCount error: $e');
@@ -216,11 +204,8 @@ class _StepDataState extends State<StepData> {
         });
         return;
       }
-      //! Stream on IOS not starting with the same value. WRONG!
-      //! Connect numbers to repository. Pull and issues.
-      //! Update readme example img
+
       _stepStreamFrom = Pedometer().stepCountStreamFrom(from: from).listen((step) {
-        print('streamFrom: $step');
         stepCountStreamFrom = step;
         setState(() {});
       });
@@ -369,7 +354,7 @@ class StepDataSquare extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 150 / 90,
+      aspectRatio: small ? 150 / 60 : 150 / 90,
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -469,8 +454,30 @@ class StepDataSquare extends StatelessWidget {
   }
 }
 
-class UserPreview extends StatelessWidget {
+class UserPreview extends StatefulWidget {
   const UserPreview({super.key});
+
+  @override
+  State<UserPreview> createState() => _UserPreviewState();
+}
+
+class _UserPreviewState extends State<UserPreview> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _packageInfo();
+    });
+  }
+
+  _packageInfo() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+    String version = packageInfo.version;
+    print('version: $version'); 
+    String buildNumber = packageInfo.buildNumber;
+    print('buildNumber: $buildNumber');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -536,22 +543,48 @@ class UserPreview extends StatelessWidget {
   }
 }
 
-class SquareSizes {
-  late final double _width;
+class GitInfo extends StatefulWidget {
+  const GitInfo({super.key});
 
-  SquareSizes(double width) {
-    _width = width - scaffoldPadding * 2;
-  }
-
-  double get avatarWidth => _width * .50;
-  double get avatarHeight => avatarWidth * .31;
-  double get stepDataWidth => _width;
-  double get stepDataHeight => stepDataWidth * 1.24;
-  double get gitSize => _width * .45;
+  @override
+  State<GitInfo> createState() => _GitInfoState();
 }
 
-class GitInfo extends StatelessWidget {
-  const GitInfo({super.key});
+class _GitInfoState extends State<GitInfo> {
+  int? issues;
+  int? pulls;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGithubData();
+  }
+
+  _loadGithubData() async {
+    try {
+      var response = await get(Uri.parse(
+          'https://api.github.com/search/issues?q=repo:Flucadetena/pedometer_2+type:issue&page=0&per_page=1'));
+
+      if (response.statusCode != 200) throw Exception('Failed to get issues. Status code: ${response.statusCode}');
+
+      issues = jsonDecode(response.body)?['total_count'] ?? 0;
+    } catch (e) {
+      print('Error getting issues: $e');
+      throw Exception('Issues error: $e');
+    }
+
+    try {
+      var response = await get(
+          Uri.parse('https://api.github.com/search/issues?q=repo:Flucadetena/pedometer_2+type:pr&page=0&per_page=1'));
+      if (response.statusCode != 200) throw Exception('Failed to get pulls. Status code: ${response.statusCode}');
+
+      pulls = jsonDecode(response.body)?['total_count'] ?? 0;
+    } catch (e) {
+      print('Error getting pulls: $e');
+      throw Exception('Pulls error: $e');
+    }
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -632,13 +665,13 @@ class GitInfo extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        const GitData(
+                        GitData(
                           label: 'Issues',
-                          number: '20',
+                          number: issues,
                         ),
-                        const GitData(
+                        GitData(
                           label: 'Pulls',
-                          number: '1',
+                          number: pulls,
                         ),
                         const Spacer(),
                         IgnorePointer(
@@ -689,7 +722,7 @@ class GitInfo extends StatelessWidget {
 
 class GitData extends StatelessWidget {
   final String label;
-  final String number;
+  final int? number;
   const GitData({required this.label, required this.number, super.key});
 
   @override
@@ -708,20 +741,46 @@ class GitData extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(
-          child: Text(
-            number,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1,
-              fontWeight: FontWeight.bold,
+        const SizedBox(width: 2),
+        if (number case int number)
+          Expanded(
+            child: Text(
+              number.toString(),
+              style: TextStyle(
+                fontSize: 14,
+                height: 1,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          )
+        else
+          Container(
+            height: 6,
+            width: 6,
+            margin: const EdgeInsets.all(4),
+            child: CircularProgressIndicator(
+              strokeWidth: 1,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
-        ),
       ],
     );
   }
+}
+
+class SquareSizes {
+  late final double _width;
+
+  SquareSizes(double width) {
+    _width = width - scaffoldPadding * 2;
+  }
+
+  double get avatarWidth => _width * .50;
+  double get avatarHeight => avatarWidth * .31;
+  double get stepDataWidth => _width;
+  double get stepDataHeight => stepDataWidth * 1.24;
+  double get gitSize => _width * .45;
 }
 
 extension DateTimeExtension on DateTime {
