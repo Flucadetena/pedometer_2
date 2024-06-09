@@ -110,7 +110,8 @@ class _StepDataState extends State<StepData> {
   // Start of the week - Monday
   late DateTime from = now.subtract(Duration(days: now.weekday - 1));
   //End of the week - Sunday
-  late DateTime to = now.add(Duration(days: DateTime.daysPerWeek - now.weekday));
+  late DateTime to =
+      now.add(Duration(days: DateTime.daysPerWeek - now.weekday));
 
   @override
   void initState() {
@@ -127,8 +128,9 @@ class _StepDataState extends State<StepData> {
   }
 
   void _checkPermissions() async {
-    PermissionStatus perm =
-        Platform.isAndroid ? await Permission.activityRecognition.request() : await Permission.sensors.request();
+    PermissionStatus perm = Platform.isAndroid
+        ? await Permission.activityRecognition.request()
+        : await Permission.sensors.request();
 
     if (perm.isDenied || perm.isPermanentlyDenied || perm.isRestricted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -186,7 +188,8 @@ class _StepDataState extends State<StepData> {
         /// In android this call is not supported but you can mix the getStep and the stream.
         /// For this you need to save the first stepCount from the stream and subtract this plus the last steps amount registered
         /// and add the difference.
-        stepCountStreamFrom = await Pedometer().getStepCount(from: from, to: DateTime.now());
+        stepCountStreamFrom =
+            await Pedometer().getStepCount(from: from, to: DateTime.now());
         setState(() {});
 
         _stepStreamFrom = Pedometer().stepCountStream().listen((step) {
@@ -197,13 +200,15 @@ class _StepDataState extends State<StepData> {
             return;
           }
 
-          stepCountStreamFrom = stepCountStreamFrom! + step - androidFirstStepFrom!;
+          stepCountStreamFrom =
+              stepCountStreamFrom! + step - androidFirstStepFrom!;
           setState(() {});
         });
         return;
       }
 
-      _stepStreamFrom = Pedometer().stepCountStreamFrom(from: from).listen((step) {
+      _stepStreamFrom =
+          Pedometer().stepCountStreamFrom(from: from).listen((step) {
         stepCountStreamFrom = step;
         setState(() {});
       });
@@ -215,7 +220,8 @@ class _StepDataState extends State<StepData> {
 
   _listenPedestrianStatusStream() {
     try {
-      _pedestrianStatusStream = Pedometer().pedestrianStatusStream().listen((status) {
+      _pedestrianStatusStream =
+          Pedometer().pedestrianStatusStream().listen((status) {
         pedestrianStatusStream = status;
         setState(() {});
       });
@@ -266,8 +272,10 @@ class _StepDataState extends State<StepData> {
                   child: Column(
                     children: [
                       StepDataSquare(
-                        backgroundColor: Theme.of(context).colorScheme.secondary,
-                        foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondary,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onSecondary,
                         time: '${from.formatDate} - ${to.formatDate}',
                         name: 'GetCount',
                         functionName: 'getStepCount()',
@@ -290,8 +298,10 @@ class _StepDataState extends State<StepData> {
                   child: Column(
                     children: [
                       StepDataSquare(
-                        backgroundColor: Theme.of(context).colorScheme.background,
-                        foregroundColor: Theme.of(context).colorScheme.onBackground,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.background,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onBackground,
                         name: 'Pedestrian Status',
                         functionName: 'pedestrianStatusStream()',
                         value: _enumToString(pedestrianStatusStream),
@@ -299,8 +309,10 @@ class _StepDataState extends State<StepData> {
                       ),
                       const SizedBox(height: 8),
                       StepDataSquare(
-                        backgroundColor: Theme.of(context).colorScheme.background,
-                        foregroundColor: Theme.of(context).colorScheme.onBackground,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.background,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onBackground,
                         time: 'Last boot - now',
                         name: 'Count',
                         functionName: 'stepCountStream()',
@@ -308,8 +320,10 @@ class _StepDataState extends State<StepData> {
                       ),
                       const SizedBox(height: 8),
                       StepDataSquare(
-                        backgroundColor: Theme.of(context).colorScheme.background,
-                        foregroundColor: Theme.of(context).colorScheme.onBackground,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.background,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onBackground,
                         time: '${from.formatDate} - now',
                         name: 'CountFrom',
                         functionName: 'stepCountStreamFrom()',
@@ -469,10 +483,12 @@ class _UserPreviewState extends State<UserPreview> {
 
   _packageInfo() async {
     try {
-      var response = await get(Uri.parse('https://api.github.com/repos/Flucadetena/pedometer_2/releases/latest'));
+      var response = await get(Uri.parse(
+          'https://api.github.com/repos/Flucadetena/pedometer_2/releases/latest'));
 
       if (response.statusCode != 200) {
-        throw Exception('Failed to get the release version. Status code: ${response.statusCode}');
+        throw Exception(
+            'Failed to get the release version. Status code: ${response.statusCode}');
       }
 
       release = jsonDecode(response.body)?['name'] ?? '-';
@@ -569,7 +585,9 @@ class _GitInfoState extends State<GitInfo> {
       var response = await get(Uri.parse(
           'https://api.github.com/search/issues?q=repo:Flucadetena/pedometer_2+type:issue&page=0&per_page=1'));
 
-      if (response.statusCode != 200) throw Exception('Failed to get issues. Status code: ${response.statusCode}');
+      if (response.statusCode != 200)
+        throw Exception(
+            'Failed to get issues. Status code: ${response.statusCode}');
 
       issues = jsonDecode(response.body)?['total_count'] ?? 0;
     } catch (e) {
@@ -578,9 +596,11 @@ class _GitInfoState extends State<GitInfo> {
     }
 
     try {
-      var response = await get(
-          Uri.parse('https://api.github.com/search/issues?q=repo:Flucadetena/pedometer_2+type:pr&page=0&per_page=1'));
-      if (response.statusCode != 200) throw Exception('Failed to get pulls. Status code: ${response.statusCode}');
+      var response = await get(Uri.parse(
+          'https://api.github.com/search/issues?q=repo:Flucadetena/pedometer_2+type:pr&page=0&per_page=1'));
+      if (response.statusCode != 200)
+        throw Exception(
+            'Failed to get pulls. Status code: ${response.statusCode}');
 
       pulls = jsonDecode(response.body)?['total_count'] ?? 0;
     } catch (e) {
@@ -636,9 +656,13 @@ class _GitInfoState extends State<GitInfo> {
                 children: [
                   SizedBox(height: sizes.gitSize * .06),
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onBackground.withOpacity(.8),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onBackground
+                          .withOpacity(.8),
                       borderRadius: BorderRadius.circular(themeBorderRadius),
                     ),
                     child: Text(
@@ -683,9 +707,11 @@ class _GitInfoState extends State<GitInfo> {
                             onPressed: () {},
                             style: ElevatedButton.styleFrom(
                               visualDensity: VisualDensity.compact,
-                              foregroundColor: Theme.of(context).colorScheme.onBackground,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onBackground,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(themeBorderRadius),
+                                borderRadius:
+                                    BorderRadius.circular(themeBorderRadius),
                               ),
                             ),
                             icon: const Text('Create new'),

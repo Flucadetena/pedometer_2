@@ -15,20 +15,23 @@ enum PedometerMethods {
 }
 
 class Pedometer {
- /// The [EventChannel] for StepStatus events.
-  static EventChannel pedestrianStatusChannel = const EventChannel('status_detection');
+  /// The [EventChannel] for StepStatus events.
+  static EventChannel pedestrianStatusChannel =
+      const EventChannel('status_detection');
 
   /// The [EventChannel] for step count events.
-  static  EventChannel stepCountChannel = const EventChannel('step_count');
+  static EventChannel stepCountChannel = const EventChannel('step_count');
 
   /// The [EventChannel] for the IOS step count from X date events.
-  static  EventChannel stepCountFromChannel = const EventChannel('step_count_from');
+  static EventChannel stepCountFromChannel =
+      const EventChannel('step_count_from');
 
   /// MethodChannel to handle all "OneTime" calls. Currently only used for 'getStepCount'.
-  static  MethodChannel methodChannel = const MethodChannel('method_channel');
+  static MethodChannel methodChannel = const MethodChannel('method_channel');
 
   /// A stream controller for tracking step status on Android.
-  static final StreamController<PedestrianStatus> _androidPedestrianStatusController = StreamController.broadcast();
+  static final StreamController<PedestrianStatus>
+      _androidPedestrianStatusController = StreamController.broadcast();
 
   /// Returns a stream of [PedestrianStatus] representing the status of steps.
   ///
@@ -46,8 +49,9 @@ class Pedometer {
   /// ```
   Stream<PedestrianStatus> pedestrianStatusStream() {
     try {
-      Stream<PedestrianStatus> stream =
-          pedestrianStatusChannel.receiveBroadcastStream().map((event) => PedestrianStatus.values[event as int]);
+      Stream<PedestrianStatus> stream = pedestrianStatusChannel
+          .receiveBroadcastStream()
+          .map((event) => PedestrianStatus.values[event as int]);
       if (Platform.isAndroid) return _androidStream(stream);
       return stream;
     } catch (e) {
@@ -75,7 +79,9 @@ class Pedometer {
   /// ```
   Stream<int> stepCountStream() {
     try {
-      return stepCountChannel.receiveBroadcastStream().map((event) => event as int);
+      return stepCountChannel
+          .receiveBroadcastStream()
+          .map((event) => event as int);
     } catch (e) {
       throw ErrorSummary('Error on StepCountStream: $e');
     }
@@ -107,8 +113,9 @@ class Pedometer {
           'stepCountStreamFrom() is not supported on Android. Use a combination of "getStepCount()" and "StepCountStream()"');
     }
     try {
-      return stepCountFromChannel
-          .receiveBroadcastStream({'startTime': from.millisecondsSinceEpoch}).map((event) => event as int);
+      return stepCountFromChannel.receiveBroadcastStream({
+        'startTime': from.millisecondsSinceEpoch
+      }).map((event) => event as int);
     } catch (e) {
       throw ErrorSummary('Error on StepCountStreamFrom: $e');
     }
@@ -137,13 +144,18 @@ class Pedometer {
   /// print('Step count from $fromDate to $toDate: $stepCount');
   /// ```
   Future<int> getStepCount({DateTime? from, DateTime? to}) async {
-    assert(!(from != null && to != null && from.compareTo(to) > 0), "From must be before to");
+    assert(!(from != null && to != null && from.compareTo(to) > 0),
+        "From must be before to");
     try {
       to ??= DateTime.now();
       from ??= to.subtract(const Duration(days: 10));
 
-      final args = {'startTime': from.millisecondsSinceEpoch, 'endTime': to.millisecondsSinceEpoch};
-      final int steps = await methodChannel.invokeMethod(_enumToString(PedometerMethods.getStepCount), args);
+      final args = {
+        'startTime': from.millisecondsSinceEpoch,
+        'endTime': to.millisecondsSinceEpoch,
+      };
+      final int steps = await methodChannel.invokeMethod(
+          _enumToString(PedometerMethods.getStepCount), args);
 
       return steps;
     } catch (e) {
@@ -152,7 +164,8 @@ class Pedometer {
   }
 
   /// Transformed stream for the Android platform
-  static Stream<PedestrianStatus> _androidStream(Stream<PedestrianStatus> stream) {
+  static Stream<PedestrianStatus> _androidStream(
+      Stream<PedestrianStatus> stream) {
     /// Init a timer and a status
     Timer? t;
     PedestrianStatus? stepStatus;
