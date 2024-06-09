@@ -7,7 +7,6 @@ import 'package:pedometer_2_example/forms.dart';
 import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
 
-// ! Add the release number to the git info
 const double themeBorderRadius = 8;
 const double scaffoldPadding = 16;
 
