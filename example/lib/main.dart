@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pedometer_2/pedometer_2.dart';
 import 'package:pedometer_2_example/forms.dart';
 import 'dart:async';
@@ -462,21 +461,27 @@ class UserPreview extends StatefulWidget {
 }
 
 class _UserPreviewState extends State<UserPreview> {
+  String release = '-';
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _packageInfo();
-    });
+    _packageInfo();
   }
 
   _packageInfo() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    try {
+      var response = await get(Uri.parse('https://api.github.com/repos/Flucadetena/pedometer_2/releases/latest'));
 
-    String version = packageInfo.version;
-    print('version: $version'); 
-    String buildNumber = packageInfo.buildNumber;
-    print('buildNumber: $buildNumber');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to get the release version. Status code: ${response.statusCode}');
+      }
+
+      release = jsonDecode(response.body)?['name'] ?? '-';
+      setState(() {});
+    } catch (e) {
+      print('Error getting the release version: $e');
+      throw Exception('Issues getting the release version: $e');
+    }
   }
 
   @override
@@ -524,7 +529,7 @@ class _UserPreviewState extends State<UserPreview> {
                   Opacity(
                     opacity: .6,
                     child: Text(
-                      'Version 4.0.1',
+                      release,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
