@@ -12,10 +12,9 @@ topics:
   - fit
   - health
 
-# ! UPDATE THIS WITH NEW IMGS FROM THE EXAMPLE APP
 screenshots:
-  - description: "Examples of the StepStatusStream screen on iOS."
-    path: images/example.png
+  - description: "Example App preview"
+    path: assets/example_preview.png
 
 environment:
   sdk: ">=3.3.4 <4.0.0"
