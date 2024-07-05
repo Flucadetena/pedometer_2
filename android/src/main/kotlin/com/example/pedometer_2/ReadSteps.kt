@@ -33,11 +33,13 @@ fun getSteps(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding, startTime
     if (hasMinPlayServices != ConnectionResult.SUCCESS) {
         // Prompt user to update their device's Google Play services app and return
         result.error("2", "Min playService version error", "${LocalRecordingClient.LOCAL_RECORDING_CLIENT_MIN_VERSION_CODE} is required, but found a lower version")
+        return
     }
 
     Log.d(TAG, "ActivityCompat: ${ActivityCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION)}")
     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
         result.error("2", "Permissions have not been requested", Exception())
+        return
     }
     Log.d(TAG, "localRecordingClient:")
     localRecordingClient.subscribe(LocalDataType.TYPE_STEP_COUNT_DELTA)
