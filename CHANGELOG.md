@@ -1,4 +1,8 @@
 
+## 5.0.4
+
+* Fixed issue Android breaking when Play Services version was to low. [Issue #4](https://github.com/Flucadetena/pedometer_2/issues/4) thanks to [@GwonHyeok](https://github.com/GwonHyeok)
+
 ## 5.0.3
 
 * Improved file formatting
