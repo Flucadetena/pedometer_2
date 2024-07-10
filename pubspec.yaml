@@ -1,6 +1,6 @@
 name: pedometer_2
 description: Pedometer & Step Detection. Get step count in a timeRange & stream live steps.
-version: 5.0.3
+version: 5.0.4
 
 repository: https://github.com/Flucadetena/pedometer_2
 issue_tracker: https://github.com/Flucadetena/pedometer_2/issues
